@@ -4,6 +4,32 @@ import type { ElementProps, ElementType, RemixElement, RemixNode, Renderable } f
 
 export type Task = (signal: AbortSignal) => void
 
+// =============================================================================
+// Remount Infrastructure
+// =============================================================================
+
+// Maps Handle → ComponentHandle for external requestRemount function
+let handleToComponent = new WeakMap<Handle<any>, ReturnType<typeof createComponent>>()
+
+/**
+ * Request a full remount of a component. This triggers:
+ * 1. Cleanup (handle.signal aborts, handle.on() listeners removed)
+ * 2. Fresh setup (component function runs again with new closures)
+ * 3. Re-render with new state
+ *
+ * Useful for HMR when the setup scope changes and state needs to reset.
+ * @param handle The handle of the component to remount
+ */
+export function requestRemount(handle: Handle<any>): void {
+  let componentHandle = handleToComponent.get(handle)
+  if (!componentHandle) {
+    console.warn('requestRemount called with unknown handle')
+    return
+  }
+  componentHandle.reset()
+  handle.update()
+}
+
 export interface Handle<C = Record<string, never>> {
   /**
    * Stable identifier per component instance. Useful for HTML APIs like
@@ -282,7 +308,38 @@ export function createComponent<C = NoContext>(config: ComponentConfig) {
     return contextValue
   }
 
-  return { render, remove, setScheduleUpdate, frame: config.frame, getContextValue }
+  /**
+   * Reset the component for remounting. This:
+   * 1. Aborts the connected signal (cleanup)
+   * 2. Clears the render function so setup runs again
+   * 3. Creates fresh abort controller for new lifecycle
+   */
+  function reset(): void {
+    // Abort connected signal - triggers cleanup of handle.on() listeners
+    if (connectedCtrl) {
+      connectedCtrl.abort()
+      connectedCtrl = null
+    }
+    // Clear render function so setup phase runs again
+    getContent = null
+    // Clear context value
+    contextValue = undefined
+  }
+
+  let componentHandle = {
+    render,
+    remove,
+    setScheduleUpdate,
+    frame: config.frame,
+    getContextValue,
+    reset,
+    handle,
+  }
+
+  // Register for requestRemount lookups
+  handleToComponent.set(handle, componentHandle)
+
+  return componentHandle
 }
 
 export function Frame(handle: Handle<FrameHandle>) {

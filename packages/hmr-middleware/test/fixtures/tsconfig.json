@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ESNext",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@remix-run/component",
+    "paths": {
+      "/@remix/hmr/runtime.js": ["../../src/lib/runtime.ts"],
+      "/assets/*": ["./app/*"]
+    }
+  },
+  "include": ["app/**/*.ts", "app/**/*.tsx", "build.ts"]
+}

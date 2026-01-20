@@ -104,7 +104,7 @@ export default [
   },
   {
     files: ['packages/**/*.{ts,tsx}'],
-    ignores: ['packages/**/*.test.ts'],
+    ignores: ['packages/**/*.test.ts', 'packages/**/test/fixtures/**'],
     plugins: { jsdoc },
     settings: {
       jsdoc: {

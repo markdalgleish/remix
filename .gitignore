@@ -5,6 +5,8 @@ node_modules/
 pnpm-publish-summary.json
 reference/
 .tmp/
+test-results/
+playwright-report/
 
 .env
 

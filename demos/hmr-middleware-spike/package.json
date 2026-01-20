@@ -1,0 +1,27 @@
+{
+  "name": "hmr-middleware-spike",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@remix-run/component": "workspace:*",
+    "@remix-run/fetch-router": "workspace:*",
+    "@remix-run/node-fetch-server": "workspace:*",
+    "@remix-run/static-middleware": "workspace:*"
+  },
+  "devDependencies": {
+    "@remix-run/hmr-middleware": "workspace:*",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "esbuild": "^0.25.10",
+    "tsx": "catalog:"
+  },
+  "scripts": {
+    "dev": "pnpm run --filter \".\" --parallel \"/^dev:/\"",
+    "dev:server": "NODE_ENV=development tsx watch server.ts",
+    "dev:browser": "esbuild app/assets/*.tsx app/assets/*.ts --outbase=app/assets --outdir=public/assets --bundle --splitting --format=esm --entry-names='[dir]/[name]' --chunk-names='chunks/[name]-[hash]' --sourcemap=inline --jsx=automatic --jsx-import-source=@remix-run/component --external:'/assets/*' --watch=forever",
+    "start": "NODE_ENV=production tsx server.ts",
+    "build": "esbuild app/assets/*.tsx app/assets/*.ts --outbase=app/assets --outdir=public/assets --bundle --splitting --format=esm --entry-names='[dir]/[name]' --chunk-names='chunks/[name]-[hash]' --minify --jsx=automatic --jsx-import-source=@remix-run/component --external:'/assets/*'",
+    "test": "tsx --test",
+    "typecheck": "tsgo --noEmit"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "name": "@remix-run/hmr-middleware",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hot Module Replacement middleware for Remix",
+  "author": "Remix Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/remix-run/remix.git",
+    "directory": "packages/hmr-middleware"
+  },
+  "type": "module",
+  "dependencies": {
+    "@swc/core": "^1.15.8",
+    "chokidar": "^4.0.0"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.1",
+    "@remix-run/component": "workspace:^",
+    "@remix-run/fetch-router": "workspace:*",
+    "@remix-run/node-fetch-server": "workspace:*",
+    "@remix-run/static-middleware": "workspace:^",
+    "@swc/types": "^0.1.25",
+    "@types/node": "catalog:",
+    "esbuild": "^0.25.0",
+    "playwright": "catalog:",
+    "prettier": "^3.3.3",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@remix-run/fetch-router": "workspace:^"
+  },
+  "scripts": {
+    "test": "node --disable-warning=ExperimentalWarning --test './src/**/*.test.ts'",
+    "test:e2e": "playwright test",
+    "test:e2e:dev": "tsx test/e2e/dev-server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "hmr",
+    "hot-module-replacement",
+    "middleware",
+    "remix",
+    "development"
+  ]
+}
