@@ -33,7 +33,7 @@ jobs:
         if: always()
         run: |
           status=0
-          for attempt in {1..3}; do
+          for attempt in {1..10}; do
             echo "Full-file attempt $attempt"
             if ! pnpm --filter record-store-demo test app/prefetch.test.e2e.ts --project firefox --quiet; then
               status=1
