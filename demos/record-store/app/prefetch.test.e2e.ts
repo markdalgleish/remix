@@ -405,16 +405,53 @@ describe('record store prefetching', () => {
   })
 
   it('prefetches mobile faceout and related covers on card hover and reuses them on navigation', async (t) => {
+    let events: unknown[] = []
+    let started = performance.now()
+    function record(event: string, detail: unknown) {
+      events.push({ ms: performance.now() - started, event, detail })
+    }
     let requests: Request[] = []
     let images: string[] = []
     let page = await t.serve(
       await createTestServer((request) => {
         let url = new URL(request.url)
+        if (url.pathname.startsWith('/albums/') || url.pathname.startsWith('/assets/app/images/')) {
+          record('server-request', url.pathname + url.search)
+        }
         if (url.pathname.startsWith('/albums/')) requests.push(request)
         if (url.pathname.startsWith('/assets/app/images/')) images.push(url.pathname + url.search)
         return router.fetch(request)
       }),
     )
+    t.after(() => console.log('MOBILE PREFETCH DIAGNOSTICS', JSON.stringify(events)))
+    page.on('requestfinished', (request) => {
+      if (/\/albums\/|\/assets\/app\/images\//.test(request.url())) {
+        record('finished', request.url())
+      }
+    })
+    page.on('requestfailed', (request) =>
+      record('failed', { url: request.url(), error: request.failure() }),
+    )
+    page.on('console', (message) => record('browser', message.text()))
+    await page.addInitScript(() => {
+      new MutationObserver((records) => {
+        for (let mutation of records) {
+          for (let node of [...mutation.addedNodes, ...mutation.removedNodes]) {
+            if (
+              node instanceof HTMLLinkElement &&
+              (node.rel === 'prefetch' || node.hasAttribute('data-responsive-prefetch'))
+            ) {
+              console.log(
+                'PREFETCH LINK',
+                performance.now(),
+                node.isConnected ? 'added' : 'removed',
+                node.outerHTML,
+              )
+            }
+          }
+        }
+      }).observe(document, { childList: true, subtree: true })
+    })
     let errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
     await page.setViewportSize({ width: 412, height: 823 })
@@ -424,6 +461,7 @@ describe('record store prefetching', () => {
     await page.goto('/search?q=Overpass%20Stereo')
     await waitForNavigationRuntime(page)
     await (await mainPage).finished()
+    record('main-response-finished', images.slice())
     await page.waitForFunction(
       () => !document.querySelector('head link[rel="prefetch"], [data-responsive-prefetch]'),
     )
@@ -433,6 +471,7 @@ describe('record store prefetching', () => {
     )
     let supportsAssetPrefetch = await prefetchesAssets(page)
     if (supportsAssetPrefetch) {
+      record('assert-images', images.slice())
       assert.deepEqual(
         images
           .filter((href) => href.includes('/overpass-stereo-1.'))
